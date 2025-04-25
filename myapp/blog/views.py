@@ -2,10 +2,10 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from django.urls import reverse
 import logging
-from .models import Post,AboutUs
+from .models import Post,AboutUs,Category
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .forms import ContactForm, RegisterForm,LoginForm,ForgotPasswordForm,ResetPasswordForm 
+from .forms import ContactForm, RegisterForm,LoginForm,ForgotPasswordForm,ResetPasswordForm,PostForm
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -141,7 +141,7 @@ def dashboard(request):
     all_posts = Post.objects.filter(user=request.user)
 
     # paginate
-    paginator = Paginator(all_posts, 5)
+    paginator = Paginator(all_posts, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -202,3 +202,17 @@ def reset_password(request, uidb64, token):
                 messages.error(request,'The password reset link is invalid')
 
     return render(request,'blog/reset_password.html', {'form': form})
+
+
+def new_post(request):
+    categories = Category.objects.all()
+    form = PostForm()
+    if request.method == 'POST':
+        #form
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.user = request.user
+            post.save()
+            return redirect('blog:dashboard')
+    return render(request,'blog/new_post.html', {'categories': categories, 'form': form})
