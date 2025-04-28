@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect, get_object_or_404
 from django.http import HttpResponse
 from django.urls import reverse
 import logging
@@ -28,7 +28,8 @@ from django.core.mail import send_mail
 def index(request):
     blog_title = "Meet Our Community"
     # posts = Post.objects.all()
-    all_posts = Post.objects.all()
+    # all_posts = Post.objects.all()
+    all_posts = Post.objects.filter(is_published=True)
 
     # Get search term if it exists
     search_term = request.GET.get('search', '')
@@ -136,7 +137,7 @@ def login(request):
 
 
 def dashboard(request):
-    blog_title = "My Posts"
+    blog_title = "Your Posts"
     #getting user posts
     all_posts = Post.objects.filter(user=request.user)
 
@@ -216,3 +217,33 @@ def new_post(request):
             post.save()
             return redirect('blog:dashboard')
     return render(request,'blog/new_post.html', {'categories': categories, 'form': form})
+
+
+def edit_post(request, post_id):
+    categories = Category.objects.all()
+    post = get_object_or_404(Post, id=post_id)
+    form = PostForm()
+    if request.method == "POST":
+        #form
+        form = PostForm(request.POST, request.FILES, instance=post)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Post Updated Succesfully!')
+            return redirect('blog:dashboard')
+
+    return render(request,'blog/edit_post.html', {'categories': categories, 'post': post, 'form': form})
+
+
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    post.delete()
+    messages.success(request, 'Post Deleted Succesfully!')
+    return redirect('blog:dashboard')
+
+
+def publish_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    post.is_published = True
+    post.save()
+    messages.success(request, 'Post Published Succesfully!')
+    return redirect('blog:dashboard')
