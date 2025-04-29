@@ -24,6 +24,7 @@
     {% endif %}
     
     <div class="row">
+        {% include 'blog/includes/errors.html' %}
         {% if page_obj %}
             {% for post in page_obj %}
             <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
